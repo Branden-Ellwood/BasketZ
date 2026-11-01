@@ -1,0 +1,480 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>:root{color-scheme:light}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Basket Compare</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: a phone shopping tool. Three tabs (Prices, Results, Manage), one column, bottom tab bar. */
+:root {
+  --bg: #F0F3F1;
+  --surface: #FFFFFF;
+  --ink: #15231C;
+  --muted: #58675F;
+  --line: #D3DCD7;
+  --accent: #1D6A48;
+  --on-accent: #FFFFFF;
+  --tint: #DCEFE4;
+  --warn: #B4410E;
+  --warn-tint: #FBE6DB;
+  --font-display: "Bricolage Grotesque", "Trebuchet MS", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --nav-h: 62px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0E1512; --surface: #16201B; --ink: #E7EFEA; --muted: #92A499; --line: #2A3830;
+    --accent: #5FCB94; --on-accent: #0A1F15; --tint: #1B3A2A; --warn: #F2905F; --warn-tint: #3A2217;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0E1512; --surface: #16201B; --ink: #E7EFEA; --muted: #92A499; --line: #2A3830;
+  --accent: #5FCB94; --on-accent: #0A1F15; --tint: #1B3A2A; --warn: #F2905F; --warn-tint: #3A2217;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.45;
+  padding-block: 14px calc(var(--nav-h) + 16px);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 640px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+h1, h2, h3 { font-family: var(--font-display); margin: 0; text-wrap: balance; }
+h1 { font-size: 26px; line-height: 1.1; }
+h2 { font-size: 19px; }
+h3 { font-size: 16px; }
+.sub { color: var(--muted); font-size: 13px; margin: 4px 0 0; }
+.meter { height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; margin-top: 10px; }
+.meter > i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .25s; }
+.group-title { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 600; margin: 6px 0 -4px; }
+.list { display: flex; flex-direction: column; gap: 10px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); gap: 8px; }
+.cell { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.lab { font-size: 12px; color: var(--muted); font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.inp { display: flex; align-items: center; gap: 4px; border: 1.5px solid var(--line); border-radius: 8px; padding: 0 8px; background: var(--bg); }
+.inp i { font-style: normal; color: var(--muted); font-family: var(--font-mono); font-size: 13px; }
+.inp input { width: 100%; min-width: 0; border: 0; background: transparent; color: var(--ink); font: 500 16px var(--font-mono); padding: 9px 0; outline: none; font-variant-numeric: tabular-nums; }
+.inp:focus-within { border-color: var(--accent); }
+.cell.best .inp { border-color: var(--accent); background: var(--tint); }
+.cell.best .lab { color: var(--accent); font-weight: 600; }
+.cell.best .lab::after { content: " · cheapest"; }
+.empty { border: 1.5px dashed var(--line); border-radius: 10px; padding: 18px; color: var(--muted); }
+.empty b { color: var(--ink); }
+
+.hero { background: var(--accent); color: var(--on-accent); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 4px; }
+.hero small { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; opacity: .85; font-weight: 600; }
+.hero .big { font-family: var(--font-display); font-size: 32px; font-weight: 700; line-height: 1.05; }
+.hero .tot { font-family: var(--font-mono); font-size: 18px; }
+.hero p { margin: 6px 0 0; font-size: 13px; opacity: .92; }
+.bars { display: flex; flex-direction: column; gap: 8px; }
+.bar { display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; font-size: 14px; }
+.bar .track { grid-column: 1 / -1; height: 8px; background: var(--line); border-radius: 4px; overflow: hidden; }
+.bar .track i { display: block; height: 100%; background: var(--muted); border-radius: 4px; }
+.bar.win .track i { background: var(--accent); }
+.bar .num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.note { font-size: 13px; color: var(--muted); margin: 0; }
+.split { background: var(--tint); border-radius: 10px; padding: 12px; font-size: 14px; }
+.split b { font-family: var(--font-mono); }
+.store-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.store-head .count { color: var(--muted); font-size: 13px; white-space: nowrap; }
+.items { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.items li { display: flex; justify-content: space-between; gap: 10px; padding: 8px 0; border-top: 1px solid var(--line); }
+.items li:first-child { border-top: 0; }
+.items .price { font-family: var(--font-mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.items .save { color: var(--accent); font-size: 12px; display: block; text-align: right; font-family: var(--font-body); }
+.items .tie { color: var(--warn); font-size: 12px; display: block; text-align: right; font-family: var(--font-body); }
+.none { color: var(--muted); font-size: 14px; margin: 0; }
+
+.row { display: flex; gap: 8px; align-items: center; }
+.row input[type=text] { flex: 1; min-width: 0; border: 1.5px solid var(--line); background: var(--bg); color: var(--ink); border-radius: 8px; padding: 10px; font: 16px var(--font-body); outline: none; }
+.row input[type=text]:focus { border-color: var(--accent); }
+.chk { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); white-space: nowrap; }
+button { font: 600 14px var(--font-body); cursor: pointer; border-radius: 8px; padding: 10px 14px; border: 1.5px solid var(--line); background: var(--surface); color: var(--ink); }
+button.primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+button.danger { color: var(--warn); }
+button.danger.armed { background: var(--warn); border-color: var(--warn); color: var(--surface); }
+button.small { padding: 6px 10px; font-size: 13px; }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.mrow { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 6px 0; border-top: 1px solid var(--line); }
+.mrow:first-child { border-top: 0; }
+.mrow span { min-width: 0; overflow-wrap: anywhere; }
+.badge { font-size: 11px; background: var(--tint); color: var(--accent); border-radius: 4px; padding: 1px 6px; margin-left: 6px; font-weight: 600; }
+
+nav {
+  position: fixed; left: 0; right: 0; bottom: 0; background: var(--surface); border-top: 1px solid var(--line);
+  display: flex; justify-content: center;
+  padding: 6px max(8px, env(safe-area-inset-right, 0px)) calc(6px + env(safe-area-inset-bottom, 0px)) max(8px, env(safe-area-inset-left, 0px));
+}
+nav .tabs { display: flex; width: 100%; max-width: 640px; gap: 4px; }
+nav button { flex: 1; border: 0; background: transparent; color: var(--muted); display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 12px; padding: 6px 4px; }
+nav button svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+nav button[aria-selected="true"] { color: var(--accent); }
+html { -webkit-text-size-adjust: 100%; }
+button, input { touch-action: manipulation; }
+button { min-height: 44px; -webkit-tap-highlight-color: transparent; }
+button.small { min-height: 40px; }
+.inp input { padding: 11px 0; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+.strip { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); padding: 4px 0 6px; display: flex; gap: 8px; align-items: stretch; overflow-x: auto; scrollbar-width: none; }
+.strip::-webkit-scrollbar { display: none; }
+.chip { flex: 0 0 auto; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 5px 10px; display: flex; flex-direction: column; min-width: 88px; }
+.chip span, .chip em { font-size: 11px; font-style: normal; color: var(--muted); white-space: nowrap; line-height: 1.3; }
+.chip b { font: 500 15px var(--font-mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.chip.main { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.chip.main span, .chip.main em { color: inherit; opacity: .85; }
+.strip button { flex: 0 0 auto; align-self: center; }
+#searchRow input { font-size: 16px; }
+.tick { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1; min-height: 44px; cursor: pointer; }
+.tick input { width: 22px; height: 22px; accent-color: var(--accent); flex: 0 0 auto; margin: 0; }
+.tick span { overflow-wrap: anywhere; }
+.items li { align-items: center; padding: 2px 0; }
+.items li.got .tick span { text-decoration: line-through; color: var(--muted); }
+/* Split screen: half-height window */
+@media (max-height: 560px) {
+  :root { --nav-h: 46px; }
+  body { padding-block-start: 8px; }
+  .wrap { gap: 10px; }
+  h1 { font-size: 20px; }
+  .sub { font-size: 12px; margin-top: 2px; }
+  .meter { margin-top: 6px; }
+  .card { padding: 10px; gap: 8px; }
+  .hero { padding: 12px; }
+  .hero .big { font-size: 26px; }
+  nav { padding-top: 2px; padding-bottom: calc(2px + env(safe-area-inset-bottom, 0px)); }
+  nav button { flex-direction: row; justify-content: center; gap: 6px; min-height: 42px; padding: 4px; }
+  nav button svg { width: 18px; height: 18px; }
+}
+/* Narrow phone or side-by-side split */
+@media (max-width: 380px) {
+  body { font-size: 14px; }
+  h1 { font-size: 22px; }
+  .grid { grid-template-columns: repeat(auto-fit, minmax(84px, 1fr)); }
+  .hero .big { font-size: 26px; }
+  nav button { font-size: 11px; }
+}
+@media (max-width: 300px) {
+  .row { flex-wrap: wrap; }
+  .store-head { flex-direction: column; align-items: flex-start; }
+}
+@media (prefers-reduced-motion: reduce) { .meter > i { transition: none; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Basket Compare</h1>
+    <p class="sub" id="headSub"></p>
+    <div class="meter" aria-hidden="true"><i id="meter"></i></div>
+  </header>
+
+  <div class="strip" id="strip" aria-live="polite"></div>
+  <div class="row" id="searchRow"><input type="text" id="q" placeholder="Search items" autocomplete="off" enterkeyhint="search" aria-label="Search items"></div>
+  <main id="v-prices" class="list"></main>
+  <p class="note" id="noMatch" hidden>No items match your search.</p>
+  <main id="v-results" class="list" hidden></main>
+  <main id="v-manage" class="list" hidden></main>
+</div>
+
+<nav aria-label="Sections"><div class="tabs" role="tablist">
+  <button role="tab" data-tab="prices" aria-selected="true"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Prices</button>
+  <button role="tab" data-tab="results" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Results</button>
+  <button role="tab" data-tab="manage" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Stores &amp; items</button>
+</div></nav>
+
+<script>
+(function () {
+  var KEY = "basket-compare-v1";
+  var uid = function () { return Math.random().toString(36).slice(2, 8); };
+  var esc = function (s) { return String(s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); };
+  var money = function (n) { return "P" + n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
+  var $ = function (s) { return document.querySelector(s); };
+
+  var MAIN = ["Lotion","Roll-on","Soap","Shampoo","Dove","Sugar","Onion","Green pepper","Carrots","Tomatoes","Meat (chicken)","Oil","Margarine","Cow peas","Baked beans","Mayonnaise","Tomato sauce","Knorrox","Washing powder","Fabric softener","Rice","Sunscreen","Spaghetti","Garlic"];
+  var ADD = ["Vaseline","Eggs","Beef","Spices","Drinks","Hair ties","Combs"];
+  function fresh() {
+    var p = [];
+    MAIN.forEach(function (n) { p.push({ id: uid(), name: n, addon: false }); });
+    ADD.forEach(function (n) { p.push({ id: uid(), name: n, addon: true }); });
+    return { t: 0, stores: ["Choppies", "Sefalana", "Spar"].map(function (n) { return { id: uid(), name: n }; }), products: p, prices: {} };
+  }
+  var S = null;
+  try { var raw = localStorage.getItem(KEY); if (raw) S = JSON.parse(raw); } catch (e) {}
+  if (!S || !S.stores || !S.products) S = fresh();
+  if (!S.prices) S.prices = {};
+  if (!S.bought) S.bought = {};
+
+  /* ---------- saving: this phone first, account backup when available ---------- */
+  var dbDoc = null, dbTimer = null, dbBusy = false, dbDirty = false, backupOn = false;
+  function flushDb() {
+    if (!dbDoc || dbBusy || !dbDirty) return;
+    dbBusy = true; dbDirty = false;
+    dbDoc.set({ state: S }).catch(function () {}).then(function () { dbBusy = false; if (dbDirty) flushDb(); });
+  }
+  function save() {
+    S.t = Date.now();
+    try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {}
+    if (dbDoc) { dbDirty = true; clearTimeout(dbTimer); dbTimer = setTimeout(flushDb, 900); }
+  }
+  (async function initBackup() {
+    try {
+      if (!window.claude || !window.claude.use) return;
+      var user = await window.claude.use("user"), db = await window.claude.use("db");
+      if (!user || !db) return;
+      var id = await user.id();
+      if (!id) return;
+      var ref = db.doc("data/users/" + id + "/basket");
+      var snap = await ref.get();
+      if (snap.exists && snap.data() && snap.data().state && (snap.data().state.t || 0) > (S.t || 0)) {
+        S = snap.data().state;
+        if (!S.prices) S.prices = {};
+        if (!S.bought) S.bought = {};
+        try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {}
+        dbDoc = ref; backupOn = true; renderAll();
+      } else {
+        dbDoc = ref; backupOn = true; dbDirty = true; flushDb(); renderManage();
+      }
+    } catch (e) {}
+  })();
+
+  /* ---------- helpers ---------- */
+  function priceOf(pid, sid) { var r = S.prices[pid]; return r && typeof r[sid] === "number" ? r[sid] : undefined; }
+  function updateHead() {
+    var total = S.products.length * S.stores.length, n = 0;
+    S.products.forEach(function (p) { S.stores.forEach(function (s) { if (priceOf(p.id, s.id) !== undefined) n++; }); });
+    $("#headSub").textContent = S.products.length + " items · " + S.stores.length + " stores · " + n + " of " + total + " prices entered";
+    $("#meter").style.width = (total ? Math.round(n / total * 100) : 0) + "%";
+    renderStrip();
+  }
+  function renderStrip() {
+    var el = $("#strip");
+    if (tab === "manage" || !S.stores.length) { el.hidden = true; return; }
+    el.hidden = false;
+    var h = "";
+    if (tab === "prices") {
+      S.stores.forEach(function (s) {
+        var sum = 0, n = 0;
+        S.products.forEach(function (p) { var v = priceOf(p.id, s.id); if (v !== undefined) { sum += v; n++; } });
+        h += '<div class="chip"><span>' + esc(s.name) + '</span><b>' + money(Math.round(sum * 100) / 100) + '</b><em>' + n + ' priced</em></div>';
+      });
+    } else {
+      var c = compute(), tot = 0, cnt = 0, per = {};
+      c.rows.forEach(function (r) { if (S.bought[r.p.id]) { tot += r.min; cnt++; var w = r.winners[0].id; per[w] = (per[w] || 0) + r.min; } });
+      h += '<div class="chip main"><span>Basket total</span><b>' + money(Math.round(tot * 100) / 100) + '</b><em>' + cnt + ' item' + (cnt === 1 ? "" : "s") + ' ticked</em></div>';
+      S.stores.forEach(function (s) {
+        if (per[s.id]) h += '<div class="chip"><span>' + esc(s.name) + '</span><b>' + money(Math.round(per[s.id] * 100) / 100) + '</b><em>in basket</em></div>';
+      });
+      if (cnt) h += '<button class="small" id="clearTicks">Clear ticks</button>';
+    }
+    el.innerHTML = h;
+  }
+
+  /* ---------- prices tab ---------- */
+  function cardHtml(p) {
+    var cells = S.stores.map(function (s) {
+      var v = priceOf(p.id, s.id);
+      return '<label class="cell" data-sid="' + s.id + '"><span class="lab">' + esc(s.name) + '</span><span class="inp"><i>P</i><input type="text" inputmode="decimal" enterkeyhint="next" autocomplete="off" data-pid="' + p.id + '" data-sid="' + s.id + '" value="' + (v === undefined ? "" : v) + '" aria-label="' + esc(p.name) + ' at ' + esc(s.name) + '"></span></label>';
+    }).join("");
+    return '<article class="card" data-pid="' + p.id + '" data-name="' + esc(p.name.toLowerCase()) + '"><h3>' + esc(p.name) + '</h3><div class="grid">' + cells + '</div></article>';
+  }
+  function markBest(card) {
+    var pid = card.getAttribute("data-pid"), vals = [];
+    S.stores.forEach(function (s) { var v = priceOf(pid, s.id); if (v !== undefined) vals.push(v); });
+    var min = vals.length >= 2 ? Math.min.apply(null, vals) : null;
+    card.querySelectorAll(".cell").forEach(function (c) {
+      var v = priceOf(pid, c.getAttribute("data-sid"));
+      c.classList.toggle("best", min !== null && v === min);
+    });
+  }
+  function renderPrices() {
+    var el = $("#v-prices");
+    if (!S.stores.length || !S.products.length) {
+      el.innerHTML = '<div class="empty"><b>Nothing to price yet.</b> Add at least one store and one item under Stores &amp; items.</div>';
+      return;
+    }
+    var main = S.products.filter(function (p) { return !p.addon; }), add = S.products.filter(function (p) { return p.addon; });
+    var h = "";
+    if (main.length) h += '<div class="group-title">Shopping list</div>' + main.map(cardHtml).join("");
+    if (add.length) h += '<div class="group-title">Add-ons</div>' + add.map(cardHtml).join("");
+    el.innerHTML = h;
+    el.querySelectorAll(".card").forEach(markBest);
+    applyFilter();
+  }
+  var query = "";
+  function applyFilter() {
+    var q = query.trim().toLowerCase(), box = $("#v-prices"), cards = box.querySelectorAll(".card"), vis = 0;
+    cards.forEach(function (c) { var m = !q || c.getAttribute("data-name").indexOf(q) > -1; c.hidden = !m; if (m) vis++; });
+    box.querySelectorAll(".group-title").forEach(function (g) { g.hidden = !!q; });
+    $("#noMatch").hidden = !(tab === "prices" && q && cards.length && !vis);
+  }
+  $("#q").addEventListener("input", function (e) { query = e.target.value; applyFilter(); });
+  $("#v-prices").addEventListener("focusin", function (e) { if (e.target.dataset && e.target.dataset.pid) { try { e.target.select(); } catch (err) {} } });
+  $("#v-prices").addEventListener("keydown", function (e) {
+    if (e.key !== "Enter" || !e.target.dataset || !e.target.dataset.pid) return;
+    e.preventDefault();
+    var all = Array.prototype.filter.call($("#v-prices").querySelectorAll("input[data-pid]"), function (i) { return !i.closest(".card").hidden; });
+    var i = all.indexOf(e.target);
+    if (i > -1 && all[i + 1]) all[i + 1].focus(); else e.target.blur();
+  });
+  $("#v-prices").addEventListener("input", function (e) {
+    var t = e.target; if (!t.dataset || !t.dataset.pid) return;
+    var raw = t.value.replace(",", ".").trim(), n = parseFloat(raw);
+    var r = S.prices[t.dataset.pid] || (S.prices[t.dataset.pid] = {});
+    if (raw === "" || isNaN(n) || n < 0) delete r[t.dataset.sid]; else r[t.dataset.sid] = Math.round(n * 100) / 100;
+    save(); markBest(t.closest(".card")); updateHead();
+  });
+
+  /* ---------- results tab ---------- */
+  function compute() {
+    var stores = S.stores, rows = [], need = [];
+    S.products.forEach(function (p) {
+      var e = [];
+      stores.forEach(function (s) { var v = priceOf(p.id, s.id); if (v !== undefined) e.push({ s: s, v: v }); });
+      if (e.length < 2) { need.push({ p: p, have: e.length }); return; }
+      var min = Math.min.apply(null, e.map(function (x) { return x.v; }));
+      var winners = e.filter(function (x) { return x.v === min; });
+      var others = e.filter(function (x) { return x.v > min; }).map(function (x) { return x.v; });
+      rows.push({ p: p, min: min, winners: winners.map(function (x) { return x.s; }), next: others.length ? Math.min.apply(null, others) : null, complete: e.length === stores.length });
+    });
+    var complete = rows.filter(function (r) { return r.complete; });
+    var totals = stores.map(function (s) {
+      var sum = 0; complete.forEach(function (r) { sum += priceOf(r.p.id, s.id); });
+      return { s: s, total: Math.round(sum * 100) / 100, wins: rows.filter(function (r) { return r.winners.some(function (w) { return w.id === s.id; }); }).length };
+    });
+    var best = null, ties = [];
+    if (complete.length) {
+      var m = Math.min.apply(null, totals.map(function (t) { return t.total; }));
+      ties = totals.filter(function (t) { return t.total === m; });
+      best = m;
+    }
+    var split = 0; complete.forEach(function (r) { split += r.min; });
+    return { rows: rows, need: need, complete: complete, totals: totals, best: best, ties: ties, split: Math.round(split * 100) / 100 };
+  }
+  var lastText = "";
+  function renderResults() {
+    var el = $("#v-results");
+    if (S.stores.length < 2) { el.innerHTML = '<div class="empty"><b>Add a second store to compare.</b> Use Stores &amp; items.</div>'; return; }
+    var c = compute();
+    if (!c.rows.length) {
+      el.innerHTML = '<div class="empty"><b>No comparisons yet.</b> Enter a price at two or more stores for any item, and the groups by store will appear here.</div>';
+      lastText = ""; return;
+    }
+    var h = "";
+    if (c.best !== null) {
+      var names = c.ties.map(function (t) { return t.s.name; }).join(" & ");
+      var missing = S.products.length - c.complete.length;
+      h += '<section class="hero"><small>' + (c.ties.length > 1 ? "Cheapest overall (tie)" : "Cheapest overall") + '</small><div class="big">' + esc(names) + '</div><div class="tot">' + money(c.best) + '</div><p>Total for the ' + c.complete.length + ' item' + (c.complete.length === 1 ? "" : "s") + ' priced at every store.' + (missing ? " " + missing + " item" + (missing === 1 ? " is" : "s are") + " missing a price somewhere and left out of the total." : "") + '</p></section>';
+      var max = Math.max.apply(null, c.totals.map(function (t) { return t.total; })) || 1;
+      h += '<section class="card"><h2>Basket total by store</h2><div class="bars">' + c.totals.map(function (t) {
+        var win = t.total === c.best;
+        return '<div class="bar' + (win ? " win" : "") + '"><span>' + esc(t.s.name) + '</span><span class="num">' + money(t.total) + '</span><div class="track"><i style="width:' + Math.max(4, Math.round(t.total / max * 100)) + '%"></i></div></div>';
+      }).join("") + '</div></section>';
+      if (c.split < c.best) {
+        h += '<section class="split">Buying each item where it is cheapest costs <b>' + money(c.split) + '</b>, which is <b>' + money(Math.round((c.best - c.split) * 100) / 100) + '</b> less than shopping only at ' + esc(c.ties[0].s.name) + '. Use the lists below.</section>';
+      }
+    } else {
+      h += '<section class="split">No item has a price at every store yet, so the stores cannot be ranked overall. The groups below use the prices you have.</section>';
+    }
+    var text = [];
+    h += '<div class="row" style="justify-content:space-between"><h2>What to buy where</h2><button class="small" id="copyAll">Copy lists</button></div>';
+    S.stores.forEach(function (s) {
+      var mine = c.rows.filter(function (r) { return r.winners.some(function (w) { return w.id === s.id; }); });
+      var sub = 0; mine.forEach(function (r) { sub += r.min; });
+      text.push(s.name + "\n" + (mine.length ? mine.map(function (r) { return "- " + r.p.name; }).join("\n") : "- (nothing cheapest here)"));
+      h += '<section class="card"><div class="store-head"><h3>' + esc(s.name) + '</h3><span class="count">' + mine.length + ' item' + (mine.length === 1 ? "" : "s") + (mine.length ? " · " + money(Math.round(sub * 100) / 100) : "") + '</span></div>';
+      if (!mine.length) h += '<p class="none">Nothing is cheapest here.</p>';
+      else h += '<ul class="items">' + mine.map(function (r) {
+        var note = r.winners.length > 1 ? '<span class="tie">tie with ' + esc(r.winners.filter(function (w) { return w.id !== s.id; }).map(function (w) { return w.name; }).join(", ")) + '</span>' : (r.next !== null ? '<span class="save">saves ' + money(Math.round((r.next - r.min) * 100) / 100) + '</span>' : "");
+        var on = S.bought[r.p.id];
+        return '<li' + (on ? ' class="got"' : '') + '><label class="tick"><input type="checkbox" data-bought="' + r.p.id + '"' + (on ? " checked" : "") + ' aria-label="In my basket: ' + esc(r.p.name) + '"><span>' + esc(r.p.name) + '</span></label><span class="price">' + money(r.min) + note + '</span></li>';
+      }).join("") + '</ul>';
+      h += '</section>';
+    });
+    lastText = text.join("\n\n");
+    if (c.need.length) {
+      h += '<section class="card"><h3>Needs more prices</h3><p class="note">These items have a price at fewer than two stores, so they cannot be compared yet.</p><p class="note" style="color:var(--ink)">' + c.need.map(function (n) { return esc(n.p.name); }).join(", ") + '</p></section>';
+    }
+    el.innerHTML = h;
+  }
+  $("#v-results").addEventListener("click", function (e) {
+    var b = e.target.closest("#copyAll"); if (!b || !lastText) return;
+    var done = function () { b.textContent = "Copied"; setTimeout(function () { b.textContent = "Copy lists"; }, 1500); };
+    try { navigator.clipboard.writeText(lastText).then(done, function () { b.textContent = "Copy not allowed"; }); } catch (err) { b.textContent = "Copy not allowed"; }
+  });
+
+  $("#v-results").addEventListener("change", function (e) {
+    var t = e.target, pid = t.dataset && t.dataset.bought; if (!pid) return;
+    if (t.checked) S.bought[pid] = true; else delete S.bought[pid];
+    save();
+    $("#v-results").querySelectorAll('input[data-bought="' + pid + '"]').forEach(function (i) { i.checked = t.checked; i.closest("li").classList.toggle("got", t.checked); });
+    renderStrip();
+  });
+  $("#strip").addEventListener("click", function (e) {
+    if (e.target.id !== "clearTicks") return;
+    S.bought = {}; save(); renderResults(); renderStrip();
+  });
+
+  /* ---------- manage tab ---------- */
+  function renderManage() {
+    var h = '<section class="card"><h2>Stores</h2><div>' + (S.stores.length ? S.stores.map(function (s) {
+      return '<div class="mrow"><span>' + esc(s.name) + '</span><button class="small danger" data-act="rm-store" data-id="' + s.id + '">Remove</button></div>';
+    }).join("") : '<p class="none">No stores yet.</p>') + '</div><form class="row" id="fStore"><input type="text" id="newStore" placeholder="New store, e.g. Shoprite" autocomplete="off" aria-label="New store name"><button class="primary" type="submit">Add</button></form></section>';
+    h += '<section class="card"><h2>Items</h2><div>' + (S.products.length ? S.products.map(function (p) {
+      return '<div class="mrow"><span>' + esc(p.name) + (p.addon ? '<em class="badge" style="font-style:normal">Add-on</em>' : "") + '</span><button class="small danger" data-act="rm-prod" data-id="' + p.id + '">Remove</button></div>';
+    }).join("") : '<p class="none">No items yet.</p>') + '</div><form id="fProd" style="display:flex;flex-direction:column;gap:8px"><div class="row"><input type="text" id="newProd" placeholder="New item, e.g. Bread" autocomplete="off" aria-label="New item name"><button class="primary" type="submit">Add</button></div><label class="chk"><input type="checkbox" id="newAddon"> Put in Add-ons</label></form></section>';
+    h += '<section class="card"><h2>Data</h2><p class="note">' + (backupOn ? "Your prices are saved on this phone and backed up to your account." : "Your prices are saved inside this app on your phone. Clearing the app's storage erases them.") + '</p><div><button class="danger" data-act="clear">Clear all prices</button></div></section>';
+    $("#v-manage").innerHTML = h;
+  }
+  var armed = null;
+  $("#v-manage").addEventListener("click", function (e) {
+    var b = e.target.closest("button[data-act]"); if (!b) return;
+    if (armed !== b) {
+      if (armed) { armed.classList.remove("armed"); armed.textContent = armed.dataset.label; }
+      armed = b; b.dataset.label = b.textContent; b.classList.add("armed"); b.textContent = "Tap again to confirm";
+      setTimeout(function () { if (armed === b && document.body.contains(b)) { b.classList.remove("armed"); b.textContent = b.dataset.label; armed = null; } }, 3000);
+      return;
+    }
+    armed = null;
+    var act = b.dataset.act, id = b.dataset.id;
+    if (act === "rm-store") { S.stores = S.stores.filter(function (s) { return s.id !== id; }); Object.keys(S.prices).forEach(function (k) { delete S.prices[k][id]; }); }
+    if (act === "rm-prod") { S.products = S.products.filter(function (p) { return p.id !== id; }); delete S.prices[id]; delete S.bought[id]; }
+    if (act === "clear") { S.prices = {}; S.bought = {}; }
+    save(); renderAll();
+  });
+  $("#v-manage").addEventListener("submit", function (e) {
+    e.preventDefault();
+    if (e.target.id === "fStore") {
+      var n = $("#newStore").value.trim(); if (!n) return;
+      S.stores.push({ id: uid(), name: n });
+    } else if (e.target.id === "fProd") {
+      var q = $("#newProd").value.trim(); if (!q) return;
+      S.products.push({ id: uid(), name: q, addon: $("#newAddon").checked });
+    } else return;
+    save(); renderAll();
+    var f = $(e.target.id === "fStore" ? "#newStore" : "#newProd"); if (f) f.focus();
+  });
+
+  /* ---------- tabs ---------- */
+  var tab = "prices";
+  function show(t) {
+    tab = t;
+    ["prices", "results", "manage"].forEach(function (k) { $("#v-" + k).hidden = k !== t; });
+    document.querySelectorAll("nav button").forEach(function (b) { b.setAttribute("aria-selected", b.dataset.tab === t ? "true" : "false"); });
+    if (t === "results") renderResults();
+    if (t === "manage") renderManage();
+    $("#searchRow").hidden = t !== "prices";
+    applyFilter();
+    renderStrip();
+    window.scrollTo(0, 0);
+  }
+  document.querySelectorAll("nav button").forEach(function (b) { b.addEventListener("click", function () { show(b.dataset.tab); }); });
+  function renderAll() { renderPrices(); renderManage(); if (tab === "results") renderResults(); updateHead(); }
+  renderAll();
+})();
+</script>
+
+</html>
